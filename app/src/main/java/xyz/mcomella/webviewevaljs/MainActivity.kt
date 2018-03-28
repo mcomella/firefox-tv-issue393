@@ -1,15 +1,16 @@
 package xyz.mcomella.webviewevaljs
 
-import android.icu.lang.UCharacter.GraphemeClusterBreak.L
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlin.concurrent.thread
+
+private const val LOGTAG = "lol"
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,17 +24,23 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 if (calledOnce) return
                 calledOnce = true
+
                 log("onPageFinished")
                 thread {
-                    Thread.sleep(2000)
+                    Thread.sleep(5000)
                     this@MainActivity.runOnUiThread {
-                        log("request focus")
+                        log("unfocus webView")
                         texty.requestFocus()
                         thread {
-                            Thread.sleep(2000)
+                            Thread.sleep(1000)
                             this@MainActivity.runOnUiThread {
+                                webView.evaluateJavascript("console.log('$LOGTAG: ' + document.activeElement);", null)
                                 log("request focus back to WebView")
                                 webView.requestFocus()
+                                webView.evaluateJavascript("console.log('$LOGTAG: ' + document.activeElement);", null)
+                                // Whatever DOMElement was focused is no longer focused.
+                                // This can be verified with the console log statements or remote
+                                // dev tools, i.e. document.activeElement.
                             }
                         }
                     }
@@ -42,7 +49,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webChromeClient = object : WebChromeClient() {
-
         }
 
         webView.settings.apply {
@@ -50,11 +56,11 @@ class MainActivity : AppCompatActivity() {
             domStorageEnabled = true
         }
 
-
-        webView.loadUrl("https://youtube.com/tv")
+        webView.loadUrl("https://google.com")
+//        webView.loadUrl("https://youtube.com/tv")
     }
 }
 
 private fun log(str: String) {
-    Log.d("lol", str)
+    Log.d(LOGTAG, str)
 }
